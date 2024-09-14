@@ -113,10 +113,10 @@ public class BountyCommands implements CommandExecutor {
 
 				sendMessage(sender, """
 						    <gold>How to use the /bounty command:</gold>
-						    <newline><gold>/bounty place <target> <reward></gold> - Place a bounty on a target for a reward
-						    <newline><gold>/bounty edit <target> (optional - placer) <new_reward></gold> - Edit an existing bounty's reward
-						    <newline><gold>/bounty remove <target> (optional - placer)</gold> - Remove an existing bounty
-						    <newline><gold>/bounty clearall</gold> - Clear all bounties
+						    <newline><gold>/bounty place <target> <reward></gold> - Place a bounty on a target for a reward.
+						    <newline><gold>/bounty edit <target> (optional - placer) <new_reward></gold> - Edit an existing bounty's reward.
+						    <newline><gold>/bounty remove <target> (optional - placer)</gold> - Remove an existing bounty.
+						    <newline><gold>/bounty clearall</gold> - Clear all bounties.
 						    <newline><gray>You can also use /bn instead of /bounty.</gray>
 						""");
 
@@ -125,9 +125,9 @@ public class BountyCommands implements CommandExecutor {
 
 				sendMessage(sender, """
 						    <gold>How to use the /bounty command:</gold>
-						    <newline><gold>/bounty place <target> <reward></gold> - Place a bounty on a target for a reward
-						    <newline><gold>/bounty edit <target> <new_reward></gold> - Edit an existing bounty's reward
-						    <newline><gold>/bounty remove <target></gold> - Remove an existing bounty
+						    <newline><gold>/bounty place <target> <reward></gold> - Place a bounty on a target for a reward.
+						    <newline><gold>/bounty edit <target> <new_reward></gold> - Edit an existing bounty's reward.
+						    <newline><gold>/bounty remove <target></gold> - Remove an existing bounty.
 						    <newline><gray>You can also use /bn instead of /bounty.</gray>
 						""");
 
@@ -138,10 +138,10 @@ public class BountyCommands implements CommandExecutor {
 
 			// Console variant: No color, plain text.
 			main.getLogger().info("How to use the /bounty command:");
-			main.getLogger().info("/bounty place <target> <reward> - Place a bounty on a target for a reward");
-			main.getLogger().info("/bounty edit <target> (optional - placer) <new_reward> - Edit an existing bounty's reward");
-			main.getLogger().info("/bounty remove <target> (optional - placer) - Remove an existing bounty");
-			main.getLogger().info("/bounty clearall - Clear all bounties");
+			main.getLogger().info("/bounty place <target> <reward> - Place a bounty on a target for a reward.");
+			main.getLogger().info("/bounty edit <target> (optional - placer) <new_reward> - Edit an existing bounty's reward.");
+			main.getLogger().info("/bounty remove <target> (optional - placer) - Remove an existing bounty.");
+			main.getLogger().info("/bounty clearall - Clear all bounties.");
 			main.getLogger().info("You can also use /bn instead of /bounty.");
 
 		}

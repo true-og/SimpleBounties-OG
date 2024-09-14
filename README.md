@@ -15,15 +15,15 @@ The output .jar will be under build/libs/
 # Permissions
 bounties.* - Allows basic access to the plugin. 
 
-bounties.admin - Allows operator permissions, such as the abilities to edit and remove other people's bounties. When an operator does that, it won't send a refund to the original bounty placer so use with caution. There is potential here to exploit the system and get infinite money by editing rewards to a really high number, so grant this permission with caution. It allows the use of the /bounty clearall command which removes all active bounties. Operators also have these permissions.
+bounties.admin - Allows operator permissions, such as the abilities to edit and remove other people's bounties. When an operator does that, it won't send a refund to the original bounty placer. Also allows the use of the /bounty clearall command, which removes all active bounties. Operators also have these permissions.
 
 # Aliases
 /bn is equivalent to /bounty
 
 # Bounty Rules
-You cannot place bounties as another person, and you cannot claim bounties on yourself. You cannot place multiple bounties on a person, and you have to be directly responsible for the kill. Be aware though, Minecraft is a little inconsistent in how it records kills, so you could blow someone up with TNT or push them off a cliff, but it wouldn't work if you pushed them into lava, for example. As of right now, you can only enter money as a reward. 
+You cannot place bounties as another person, and you cannot claim bounties on yourself. You cannot place multiple bounties on a person, and you have to be directly responsible for the kill. As of right now, you can only enter Diamonds as a reward. 
 
-# How It Works
+# Guide
 
 ### For Regular Users
 To place a bounty do /bounty place [target player] [reward amount].
