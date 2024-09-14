@@ -1,11 +1,16 @@
-# SimpleBounties
-A simple, straight-forward Spigot plugin for servers using Minecraft 1.19 to allow players to place and complete bounties on each other. 
+# SimpleBounties-OG
+A simple, straight-forward Spigot plugin for servers using Minecraft 1.19 to allow players to place and complete bounties on each other. Maintained by [TrueOG Network](https://true-og.net).
 
 # Dependencies
-EssentialsX and Vault.
+EssentialsX and [DiamondBank-OG](https://github.com:true-og/DiamondBank-OG).
 
-# Install
-Just download and drop the "Bounties-1.0-RELEASE.jar" file from the target folder into your server's plugin folder, and you're done!
+# Building
+
+Run
+
+```./gradlew build```
+
+The output .jar will be under build/libs/
 
 # Permissions
 bounties.* - Allows basic access to the plugin. 
