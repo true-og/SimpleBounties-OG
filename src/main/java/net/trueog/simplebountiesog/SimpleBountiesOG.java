@@ -4,11 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger; // Vault
 
+import org.bukkit.Bukkit;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.permissions.Permission;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import net.trueog.diamondbankog.DiamondBankAPI;
 
 public final class SimpleBountiesOG extends JavaPlugin {
 
@@ -18,6 +21,7 @@ public final class SimpleBountiesOG extends JavaPlugin {
 	private static final Logger log = Logger.getLogger("Minecraft");
 	private static Permission perms = null;
 	static BountyCommands bountyCommands;
+	private static DiamondBankAPI diamondBankAPI;
 
 	// Plugin startup logic.
 	@Override
@@ -40,6 +44,15 @@ public final class SimpleBountiesOG extends JavaPlugin {
 		loadBounties();
 
 		setupPermissions();
+		
+		// Import TrueOG Network DiamondBank-OG API.
+		RegisteredServiceProvider<DiamondBankAPI> diamondBankAPIProvider = getServer().getServicesManager().getRegistration(DiamondBankAPI.class);
+		if (diamondBankAPIProvider == null) {
+			getLogger().severe("DiamondBank-OG API is null");
+			Bukkit.getPluginManager().disablePlugin(this);
+			return;
+		}
+		diamondBankAPI = diamondBankAPIProvider.getProvider();
 
 		log.info("SimpleBounties-OG has loaded correctly.");
 
@@ -130,6 +143,12 @@ public final class SimpleBountiesOG extends JavaPlugin {
 
 		return bountyCommands;
 
+	}
+	
+	public static DiamondBankAPI diamondBankAPI() {
+		
+		return diamondBankAPI;
+	
 	}
 
 }

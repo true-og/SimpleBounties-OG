@@ -17,7 +17,6 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.trueog.diamondbankog.DiamondBankAPI;
-import net.trueog.diamondbankog.DiamondBankOG;
 import net.trueog.diamondbankog.PostgreSQL;
 
 public class BountyCommands implements CommandExecutor {
@@ -888,7 +887,7 @@ public class BountyCommands implements CommandExecutor {
 	// Common method to initialize the DiamondBank-OG API and handle errors.
 	private DiamondBankAPI getDiamondBankAPI(Player p, String amt) {
 
-		DiamondBankAPI diamondBankAPI = DiamondBankOG.getApi();
+		DiamondBankAPI diamondBankAPI = SimpleBountiesOG.diamondBankAPI();
 		if (diamondBankAPI == null) {
 
 			main.getLogger().info("ERROR: Could not initialize the DiamondBank-OG API! Do you have it installed and configured properly?" + amt);
