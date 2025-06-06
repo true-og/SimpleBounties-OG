@@ -1,17 +1,16 @@
 plugins {
+    id("com.gradleup.shadow") version "8.3.6" // Import shadow API.
     java // Tell gradle this is a java project.
-    id("io.github.goooler.shadow") version "8.1.8"
     eclipse // Import eclipse plugin for IDE integration.
 }
 
 group = "me.bribedjupiter" // From groupId in pom.xml
-version = "1.0-OG" // From version in pom.xml
+version = "0.2" // From version in pom.xml
 val apiVersion = "1.19" // Declare Minecraft server target version.
 
-// Java version set to 1.8 to match pom.xml
 java {
+    // Declare java version.
     sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
 }
 
 tasks.named<ProcessResources>("processResources") {
@@ -29,7 +28,7 @@ tasks.named<ProcessResources>("processResources") {
 
 repositories {
     mavenCentral()
-
+    gradlePluginPortal()
     maven {
         url = uri("https://repo.purpurmc.org/snapshots")
     }
@@ -53,33 +52,26 @@ dependencies {
     compileOnly("net.essentialsx:EssentialsX:2.19.0") {
         exclude(group = "org.bstats", module = "bstats-bukkit")
     }
-    implementation(project(":libs:DiamondBank-OG"))
+    compileOnly(project(":libs:DiamondBank-OG"))
 }
 
-tasks.withType<AbstractArchiveTask>().configureEach {
+tasks.withType<AbstractArchiveTask>().configureEach { // Ensure reproducible .jars
     isPreserveFileTimestamps = false
     isReproducibleFileOrder = true
 }
 
 tasks.shadowJar {
     exclude("io.github.miniplaceholders.*") // Exclude the MiniPlaceholders package from being shadowed.
+    archiveClassifier.set("") // Use empty string instead of null.
     minimize()
 }
 
-tasks.jar {
+tasks.build {
     dependsOn(tasks.shadowJar)
-    archiveClassifier.set("part")
-}
-
-tasks.shadowJar {
-    archiveClassifier.set("") // Use empty string instead of null
-    from("LICENSE") {
-        into("/")
-    }
 }
 
 tasks.jar {
-    dependsOn("shadowJar")
+    archiveClassifier.set("part")
 }
 
 tasks.withType<JavaCompile>().configureEach {
