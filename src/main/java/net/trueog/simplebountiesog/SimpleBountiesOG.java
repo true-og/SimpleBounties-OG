@@ -2,7 +2,7 @@ package net.trueog.simplebountiesog;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger; // Vault
+import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
 import org.bukkit.command.TabCompleter;
@@ -11,27 +11,42 @@ import org.bukkit.permissions.Permission;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import net.trueog.diamondbankog.DiamondBankAPI;
+import net.trueog.diamondbankog.DiamondBankAPIJava;
 
 public final class SimpleBountiesOG extends JavaPlugin {
 
+	private static SimpleBountiesOG plugin;
 	FileConfiguration config = getConfig();
 	BountyEvents bountyEvents = new BountyEvents();
 	TabCompleter tabCompleter = new TabCompletion();
 	private static final Logger log = Logger.getLogger("Minecraft");
 	private static Permission perms = null;
 	static BountyCommands bountyCommands;
-	private static DiamondBankAPI diamondBankAPI;
+	private static DiamondBankAPIJava diamondBankAPI;
+	private EconomyHandler economyHandler;
 
 	// Plugin startup logic.
 	@Override
 	public void onEnable() {
 
+		// Initialize the plugin main class as a passable object.
+		plugin = this;
+
 		config.options().copyDefaults(true);
 		saveConfig();
 
+		// Initialize DiamondBank-OG API.
+		RegisteredServiceProvider<DiamondBankAPIJava> diamondBankAPIProvider = getServer().getServicesManager().getRegistration(DiamondBankAPIJava.class);
+		if (diamondBankAPIProvider == null) {
+			getLogger().severe("DiamondBank-OG API is null");
+			Bukkit.getPluginManager().disablePlugin(this);
+			return;
+		}
+		diamondBankAPI = diamondBankAPIProvider.getProvider();
+
 		// Initialize bounty commands.
-		bountyCommands = new BountyCommands(this);
+		economyHandler = new EconomyHandler(diamondBankAPI);
+		bountyCommands = new BountyCommands(this, economyHandler);
 
 		getServer().getPluginCommand("bounty").setExecutor(bountyCommands);
 		getServer().getPluginManager().registerEvents(bountyEvents, this);
@@ -44,15 +59,6 @@ public final class SimpleBountiesOG extends JavaPlugin {
 		loadBounties();
 
 		setupPermissions();
-		
-		// Import TrueOG Network DiamondBank-OG API.
-		RegisteredServiceProvider<DiamondBankAPI> diamondBankAPIProvider = getServer().getServicesManager().getRegistration(DiamondBankAPI.class);
-		if (diamondBankAPIProvider == null) {
-			getLogger().severe("DiamondBank-OG API is null");
-			Bukkit.getPluginManager().disablePlugin(this);
-			return;
-		}
-		diamondBankAPI = diamondBankAPIProvider.getProvider();
 
 		log.info("SimpleBounties-OG has loaded correctly.");
 
@@ -144,11 +150,17 @@ public final class SimpleBountiesOG extends JavaPlugin {
 		return bountyCommands;
 
 	}
-	
-	public static DiamondBankAPI diamondBankAPI() {
-		
+
+	public static SimpleBountiesOG getPlugin() {
+
+		return plugin;
+
+	}
+
+	public static DiamondBankAPIJava diamondBankAPI() {
+
 		return diamondBankAPI;
-	
+
 	}
 
 }

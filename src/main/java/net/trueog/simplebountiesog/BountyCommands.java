@@ -2,8 +2,6 @@ package net.trueog.simplebountiesog;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -13,20 +11,18 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
-import net.trueog.diamondbankog.DiamondBankAPI;
-import net.trueog.diamondbankog.PostgreSQL;
+import net.trueog.utilitiesog.UtilitiesOG;
 
 public class BountyCommands implements CommandExecutor {
 
 	private final SimpleBountiesOG main;
+	private final EconomyHandler diamondbank;
 	public List<Bounty> bounties = new ArrayList<Bounty>();
 
-	public BountyCommands (SimpleBountiesOG main) {
+	public BountyCommands(SimpleBountiesOG main, EconomyHandler economyHandler) {
 
 		this.main = main;
+		this.diamondbank = economyHandler;
 
 	}
 
@@ -35,7 +31,11 @@ public class BountyCommands implements CommandExecutor {
 
 		if (args.length == 0) {
 
-			sendMessage(sender, "<red>You are missing arguments.</red>");
+			if(sender instanceof Player) {	
+
+				UtilitiesOG.trueogMessage((Player) sender, "<red>You are missing arguments.</red>");
+
+			}
 
 			return true;
 
@@ -49,8 +49,7 @@ public class BountyCommands implements CommandExecutor {
 			// Check permissions for the player.
 			if (! player.isOp() || ! player.hasPermission("bounties.*")) {
 
-				sendMessage(sender, "<red>ERROR: You do not have permission to use that command!</red>");
-
+				UtilitiesOG.trueogMessage(player, "<red>ERROR: You do not have permission to use that command!</red>");
 				return true;
 
 			}
@@ -62,7 +61,6 @@ public class BountyCommands implements CommandExecutor {
 			if (! sender.isOp() || ! sender.hasPermission("bounties.*")) {
 
 				main.getLogger().info("ERROR: You do not have permission to use that command!");
-
 				return true;
 
 			}
@@ -73,7 +71,6 @@ public class BountyCommands implements CommandExecutor {
 		if (args[0].equalsIgnoreCase("help")) {
 
 			sendHelpMessage(sender);
-
 			return true;
 
 		}
@@ -86,16 +83,9 @@ public class BountyCommands implements CommandExecutor {
 			return handlePlayerCommands(player, args);
 
 		}
-		else if (sender instanceof ConsoleCommandSender) {
-
-			return handleConsoleCommands(sender, args);
-
-		}
 		else {
 
-			sendMessage(sender, "<red>This command can only be run by a player or the console.</red>");
-
-			return true;
+			return handleConsoleCommands(sender, args);
 
 		}
 
@@ -110,7 +100,7 @@ public class BountyCommands implements CommandExecutor {
 			Player player = (Player) sender;
 			if (player.hasPermission("bounties.admin")) {
 
-				sendMessage(sender, """
+				UtilitiesOG.trueogMessage(player, """
 						    <gold>How to use the /bounty command:</gold>
 						    <newline><gold>/bounty place <target> <reward></gold> - Place a bounty on a target for a reward.
 						    <newline><gold>/bounty edit <target> (optional - placer) <new_reward></gold> - Edit an existing bounty's reward.
@@ -122,7 +112,7 @@ public class BountyCommands implements CommandExecutor {
 			}
 			else {
 
-				sendMessage(sender, """
+				UtilitiesOG.trueogMessage(player, """
 						    <gold>How to use the /bounty command:</gold>
 						    <newline><gold>/bounty place <target> <reward></gold> - Place a bounty on a target for a reward.
 						    <newline><gold>/bounty edit <target> <new_reward></gold> - Edit an existing bounty's reward.
@@ -156,7 +146,7 @@ public class BountyCommands implements CommandExecutor {
 		case "place":
 			if (args.length < 3) {
 
-				sendMessage(player, "<red>Usage: /bounty place <target> <reward></red>");
+				UtilitiesOG.trueogMessage(player, "<red>Usage: /bounty place <target> <reward></red>");
 
 				return true;
 
@@ -169,7 +159,7 @@ public class BountyCommands implements CommandExecutor {
 			}
 			catch (NumberFormatException error) {
 
-				sendMessage(player, "<red>Invalid reward amount. Must be a number.</red>");
+				UtilitiesOG.trueogMessage(player, "<red>Invalid reward amount. Must be a number.</red>");
 
 				return true;
 
@@ -181,7 +171,7 @@ public class BountyCommands implements CommandExecutor {
 		case "remove":
 			if (args.length < 2) {
 
-				sendMessage(player, "<red>Usage: /bounty remove <target></red>");
+				UtilitiesOG.trueogMessage(player, "<red>Usage: /bounty remove <target></red>");
 
 				return true;
 
@@ -193,7 +183,7 @@ public class BountyCommands implements CommandExecutor {
 		case "edit":
 			if (args.length < 3) {
 
-				sendMessage(player, "<red>Usage: /bounty edit <target> <new_reward></red>");
+				UtilitiesOG.trueogMessage(player, "<red>Usage: /bounty edit <target> <new_reward></red>");
 
 				return true;
 
@@ -206,7 +196,7 @@ public class BountyCommands implements CommandExecutor {
 			}
 			catch (NumberFormatException error) {
 
-				sendMessage(player, "<red>Invalid reward amount. Must be a number.</red>");
+				UtilitiesOG.trueogMessage(player, "<red>Invalid reward amount. Must be a number.</red>");
 
 				return true;
 
@@ -218,18 +208,18 @@ public class BountyCommands implements CommandExecutor {
 		case "list":
 			if (bounties.isEmpty()) {
 
-				sendMessage(player, "<red>No bounties!</red>");
+				UtilitiesOG.trueogMessage(player, "<red>No bounties!</red>");
 
 			}
 			else {
 
 				for (Bounty bounty : bounties) {
 
-					sendMessage(player, "<gold>BOUNTY: " + bounty.TARGET + " PLACER: " + bounty.SENDER + " REWARD: <red>$" + bounty.REWARD + "</red></gold>");
+					UtilitiesOG.trueogMessage(player, "<gold>BOUNTY: " + bounty.TARGET + " PLACER: " + bounty.SENDER + " REWARD: <red>$" + bounty.REWARD + "</red></gold>");
 
 				}
 
-				sendMessage(player, "<green>Bounties shown.</green>");
+				UtilitiesOG.trueogMessage(player, "<green>Bounties shown.</green>");
 
 			}
 
@@ -239,18 +229,18 @@ public class BountyCommands implements CommandExecutor {
 
 				bounties.clear();
 
-				sendMessage(player, "<green>All bounties cleared.</green>");
+				UtilitiesOG.trueogMessage(player, "<green>All bounties cleared.</green>");
 
 			}
 			else {
 
-				sendMessage(player, "<red>You don't have permission to clear all bounties.</red>");
+				UtilitiesOG.trueogMessage(player, "<red>You don't have permission to clear all bounties.</red>");
 
 			}
 
 			return true;
 		default:
-			sendMessage(player, "<red>Unrecognized command.</red>");
+			UtilitiesOG.trueogMessage(player, "<red>Unrecognized command.</red>");
 
 			return true;
 		}
@@ -356,29 +346,6 @@ public class BountyCommands implements CommandExecutor {
 
 	}
 
-	// Helper function to send messages with MiniMessage for players, plain text for console.
-	private void sendMessage(CommandSender sender, String message) {
-
-		if (sender instanceof Player) {
-
-			Player player = (Player) sender;
-
-			Component component = MiniMessage.miniMessage().deserialize(message);
-
-			player.sendMessage(component);
-
-		}
-		else {
-
-			// For console, strip MiniMessage tags and send plain text.
-			String plainMessage = LegacyComponentSerializer.legacySection().serialize(MiniMessage.miniMessage().deserialize(message));
-
-			sender.sendMessage(plainMessage);
-
-		}
-
-	}
-
 	private void placeBounty(CommandSender sender, String target, String reward) {
 
 		Bounty bounty = new Bounty();
@@ -394,48 +361,40 @@ public class BountyCommands implements CommandExecutor {
 
 					bounty.SENDER = pSender.getName();
 
-					if (withdraw(pSender, reward)) {
+					diamondbank.withdraw(pSender, reward);
 
-						// Place the bounty.
-						bounties.add(bounty);
+					// Place the bounty.
+					bounties.add(bounty);
 
-						sendMessage(sender, "<green>Bounty placed on: </green>" + "<yellow>" + target + "<green>.</green>");
+					UtilitiesOG.trueogMessage(pSender, "<green>Bounty placed on: </green>" + "<yellow>" + target + "<green>.</green>");
 
-						// Notify all players.
-						for (Player player : Bukkit.getOnlinePlayers()) {
+					// Notify all players.
+					for (Player player : Bukkit.getOnlinePlayers()) {
 
-							sendMessage(player, "<gold>" + pSender.getName() + " has placed a BOUNTY on " + target + " for <red>$" + reward + "</red></gold>");
-
-						}
-					}
-					else {
-
-						sendMessage(sender, "<red>Bounty not placed: insufficient funds or invalid reward amount.</red>");
+						UtilitiesOG.trueogMessage(player, "<gold>" + pSender.getName() + " has placed a BOUNTY on " + target + " for <red>$" + reward + "</red></gold>");
 
 					}
 
 				}
 				else {
 
-					sendMessage(sender, "<red>You have already placed a bounty on " + target + ".</red>");
+					UtilitiesOG.trueogMessage(pSender, "<red>Bounty not placed: insufficient funds or invalid reward amount.</red>");
 
 				}
 
 			}
 			else {
 
-				// Console placing a bounty.
-				bounty.SENDER = "God";
-				if (! hasPlacedBounty("God", target)) {
+				if (sender instanceof Player) {
 
-					bounties.add(bounty);
+					Player pSender = (Player) sender;
 
-					main.getLogger().info("Bounty placed on: " + target + ".");
+					UtilitiesOG.trueogMessage(pSender, "<red>You have already placed a bounty on " + target + ".</red>");
 
 				}
 				else {
 
-					main.getLogger().info("The server has already placed a bounty on " + target + ".");
+					UtilitiesOG.logToConsole("[SimpleBounties-OG]", "<red>You have already placed a bounty on " + target + ".</red>");
 
 				}
 
@@ -444,7 +403,20 @@ public class BountyCommands implements CommandExecutor {
 		}
 		else {
 
-			sendMessage(sender, "<red>ERROR: Unknown player.</red>");
+			// Console placing a bounty.
+			bounty.SENDER = "God";
+			if (! hasPlacedBounty("God", target)) {
+
+				bounties.add(bounty);
+
+				main.getLogger().info("Bounty placed on: " + target + ".");
+
+			}
+			else {
+
+				main.getLogger().info("The server has already placed a bounty on " + target + ".");
+
+			}
 
 		}
 
@@ -459,6 +431,8 @@ public class BountyCommands implements CommandExecutor {
 
 			if (sender instanceof Player && placer.equals("null")) {
 
+				Player p = (Player) sender;
+
 				// Player is canceling their own bounty.
 				for (Bounty bounty : bounties) {
 
@@ -468,10 +442,9 @@ public class BountyCommands implements CommandExecutor {
 
 						toCancel = bounty;
 
-						Player p = (Player) sender;
-						deposit(p, bounty.REWARD);
+						diamondbank.deposit(p, bounty.REWARD);
 
-						sendMessage(sender, "<green>Bounty on " + target + " removed</green>");
+						UtilitiesOG.trueogMessage(p, "<green>Bounty on " + target + " removed</green>");
 
 						break;
 
@@ -481,43 +454,43 @@ public class BountyCommands implements CommandExecutor {
 
 				if (! found) {
 
-					sendMessage(sender, "<red>You have not placed a bounty on " + target + "</red>");
+					UtilitiesOG.trueogMessage(p, "<red>You have not placed a bounty on " + target + "</red>");
 
 				}
 
 			}
 			else {
 
-				// Console or admin canceling a bounty.
-				for (Bounty bounty : bounties) {
+				if (sender instanceof Player) {
 
-					if (bounty.SENDER.equalsIgnoreCase(placer) && bounty.TARGET.equalsIgnoreCase(target)) {
+					Player p = (Player) sender;
 
-						found = true;
-						toCancel = bounty;
+					for (Bounty bounty : bounties) {
 
-						sendMessage(sender, "<green>Bounty on " + target + " removed</green>");
+						if (bounty.SENDER.equalsIgnoreCase(placer) && bounty.TARGET.equalsIgnoreCase(target)) {
 
-						break;
+							found = true;
+							toCancel = bounty;
+
+							UtilitiesOG.trueogMessage(p, "<green>Bounty on " + target + " removed</green>");
+
+							break;
+
+						}
 
 					}
 
-				}
+					if (! found) {
 
-				if (! found) {
+						UtilitiesOG.trueogMessage(p, "<red>Bounty on " + target + " not found</red>");
 
-					sendMessage(sender, "<red>Bounty on " + target + " not found</red>");
+					}
 
 				}
 
 			}
 
 			bounties.remove(toCancel);
-
-		}
-		else {
-
-			sendMessage(sender, "<red>Unknown player</red>");
 
 		}
 
@@ -531,30 +504,20 @@ public class BountyCommands implements CommandExecutor {
 
 			if (sender instanceof Player && placer.equals("null")) {
 
+				Player p = (Player) sender;
 				for (Bounty bounty : bounties) {
 
 					if (bounty.SENDER.equalsIgnoreCase(sender.getName()) && bounty.TARGET.equalsIgnoreCase(target)) {
 
 						found = true;
 
-						Player p = (Player) sender;
-						deposit(p, bounty.REWARD);
+						diamondbank.deposit(p, bounty.REWARD);
 
-						if (withdraw(p, reward)) {
+						diamondbank.withdraw(p, reward);
 
-							bounty.REWARD = reward;
+						bounty.REWARD = reward;
 
-							sendMessage(sender, "<green>Bounty on " + target + ": reward edited to <red>$" + reward + "</red></green>");
-
-						}
-						else {
-
-							sendMessage(sender, "<red>Bounty on " + target + ": unable to edit reward</red>");
-
-							// Revert transaction.
-							withdraw(p, bounty.REWARD);
-
-						}
+						UtilitiesOG.trueogMessage(p, "<green>Bounty on " + target + ": reward edited to <red>$" + reward + "</red></green>");
 
 						break;
 
@@ -563,40 +526,39 @@ public class BountyCommands implements CommandExecutor {
 				}
 				if (! found) {
 
-					sendMessage(sender, "<red>You have not placed a bounty on " + target + "</red>");
+					UtilitiesOG.trueogMessage(p, "<red>You have not placed a bounty on " + target + "</red>");
 
 				}
 
 			}
 			else {
 
-				// Admin or console editing the bounty.
-				for (Bounty bounty : bounties) {
+				if (sender instanceof Player) {
 
-					if (bounty.SENDER.equalsIgnoreCase(placer) && bounty.TARGET.equalsIgnoreCase(target)) {
+					Player p = (Player) sender;
+					for (Bounty bounty : bounties) {
 
-						found = true;
-						bounty.REWARD = reward;
+						if (bounty.SENDER.equalsIgnoreCase(placer) && bounty.TARGET.equalsIgnoreCase(target)) {
 
-						sendMessage(sender, "<green>Bounty on " + target + " edited to <red>$" + reward + "</red></green>");
+							found = true;
+							bounty.REWARD = reward;
 
-						break;
+							UtilitiesOG.trueogMessage(p, "<green>Bounty on " + target + " edited to <red>$" + reward + "</red></green>");
+
+							break;
+
+						}
+
+					}
+					if (! found) {
+
+						UtilitiesOG.trueogMessage(p, "<red>Bounty on " + target + " not found</red>");
 
 					}
 
 				}
-				if (! found) {
-
-					sendMessage(sender, "<red>Bounty on " + target + " not found</red>");
-
-				}
 
 			}
-
-		}
-		else {
-
-			sendMessage(sender, "<red>Unknown player</red>");
 
 		}
 
@@ -753,7 +715,7 @@ public class BountyCommands implements CommandExecutor {
 			Player p = Bukkit.getPlayer(killer);
 
 			// Deposit the reward to the killer's balance.
-			deposit(p, amt);
+			diamondbank.deposit(p, amt);
 
 			// Remove the bounty.
 			bounties.remove(b);
@@ -763,140 +725,9 @@ public class BountyCommands implements CommandExecutor {
 		// Notify all online players about the completed bounty.
 		for (Player player : Bukkit.getOnlinePlayers()) {
 
-			sendMessage(player, "<gold>" + killer + " has completed a bounty on " + killed + " for</gold> <aqua>" + amt + "Diamonds </aqua>");
+			UtilitiesOG.trueogMessage(player, "<gold>" + killer + " has completed a bounty on " + killed + " for</gold> <aqua>" + amt + "Diamonds </aqua>");
 
 		}
-
-	}
-
-	public boolean withdraw(Player p, String amt) {
-
-		int amountToWithdraw = parseAmount(p, amt);
-		if (amountToWithdraw <= 0) {
-
-			return false;
-
-		}
-
-		DiamondBankAPI diamondBankAPI = getDiamondBankAPI(p, amt);
-		if (diamondBankAPI == null) {
-
-			return false;
-
-		}
-
-		CompletableFuture<PostgreSQL.PlayerBalance> asyncPlayerBalance = diamondBankAPI.getPlayerBalance(p.getUniqueId(), PostgreSQL.BalanceType.ALL);
-		PostgreSQL.PlayerBalance playerBalance = null;
-		try {
-
-			playerBalance = asyncPlayerBalance.get();
-
-		}
-		catch (InterruptedException | ExecutionException errors) {
-
-			errors.printStackTrace();
-
-			sendMessage(p, "<red>ERROR: Internal error with DiamondBank-OG. Contact a Developer!</red>");
-
-			return false;
-
-		}
-
-		double balance = playerBalance.getBankBalance() + playerBalance.getEnderChestBalance() + playerBalance.getInventoryBalance();
-
-		// Check if player can afford the withdrawal.
-		if (balance < amountToWithdraw) {
-
-			sendMessage(p, "<red>ERROR: Insufficient balance.</red>");
-
-			return false;
-
-		}
-
-		diamondBankAPI.withdrawFromPlayer(p.getUniqueId(), amountToWithdraw);
-
-		main.getLogger().info("Transaction success!");
-
-		sendMessage(p, "<aqua>" + amt + "Diamonds</aqua> <yellow>have been withdrawn. Your new balance is: <aqua>" + balance + "Diamonds</aqua><yellow>.</yellow>");
-
-		return true;
-
-	}
-
-	public void deposit(Player p, String amt) {
-
-		int amountToWithdraw = parseAmount(p, amt);
-		if (amountToWithdraw <= 0) {
-
-			return;
-
-		}
-
-		DiamondBankAPI diamondBankAPI = getDiamondBankAPI(p, amt);
-		if (diamondBankAPI == null) {
-
-			return;
-
-		}
-
-		diamondBankAPI.addToPlayerBankBalance(p.getUniqueId(), amountToWithdraw);
-
-		CompletableFuture<PostgreSQL.PlayerBalance> asyncPlayerBalance = diamondBankAPI.getPlayerBalance(p.getUniqueId(), PostgreSQL.BalanceType.ALL);
-		PostgreSQL.PlayerBalance playerBalance = null;
-		try {
-
-			playerBalance = asyncPlayerBalance.get();
-
-		}
-		catch (InterruptedException | ExecutionException errors) {
-
-			errors.printStackTrace();
-
-			sendMessage(p, "<red>ERROR: Internal error with DiamondBank-OG. Contact a Developer!</red>");
-
-		}
-
-		double balance = playerBalance.getBankBalance() + playerBalance.getEnderChestBalance() + playerBalance.getInventoryBalance();
-
-		sendMessage(p, "<aqua>" + amt + "Diamonds <yellow>have been deposited. Your new balance is:</yellow> <aqua>" + balance + "Diamonds</aqua><yellow>.</yellow>");
-
-		main.getLogger().info("Transaction success! Player: " + p.getName() + " Amount: " + amt + ".");
-
-	}
-
-	// Common function to parse the amount and handle errors.
-	private int parseAmount(Player p, String amt) {
-
-		try {
-
-			return Integer.parseInt(amt);
-
-		}
-		catch (Exception error) {
-
-			main.getLogger().info("ERROR: Invalid number of Diamonds specified by: " + p + ". Amount: " + amt + ".");
-
-			sendMessage(p, "<red>ERROR: Invalid number of Diamonds.</red>");
-
-			return -1;
-
-		}
-
-	}
-
-	// Common method to initialize the DiamondBank-OG API and handle errors.
-	private DiamondBankAPI getDiamondBankAPI(Player p, String amt) {
-
-		DiamondBankAPI diamondBankAPI = SimpleBountiesOG.diamondBankAPI();
-		if (diamondBankAPI == null) {
-
-			main.getLogger().info("ERROR: Could not initialize the DiamondBank-OG API! Do you have it installed and configured properly?" + amt);
-
-			sendMessage(p, "<red>ERROR: Could not initialize the DiamondBank-OG API! Do you have it installed and configured properly?</red>");
-
-		}
-
-		return diamondBankAPI;
 
 	}
 

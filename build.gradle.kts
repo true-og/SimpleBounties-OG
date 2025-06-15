@@ -4,14 +4,14 @@ plugins {
     eclipse // Import eclipse plugin for IDE integration.
 }
 
-group = "me.bribedjupiter" // From groupId in pom.xml
-version = "0.2" // From version in pom.xml
-val apiVersion = "1.19" // Declare Minecraft server target version.
-
 java {
     // Declare java version.
     sourceCompatibility = JavaVersion.VERSION_17
 }
+
+group = "me.bribedjupiter" // From groupId in pom.xml
+version = "0.3" // Declare plugin version (will be in .jar).
+val apiVersion = "1.19" // Declare Minecraft server target version.
 
 tasks.named<ProcessResources>("processResources") {
     val props = mapOf(
@@ -23,6 +23,9 @@ tasks.named<ProcessResources>("processResources") {
 
     filesMatching("plugin.yml") {
         expand(props)
+    }
+    from("LICENSE") { // Bundle license into .jars.
+        into("/")
     }
 }
 
@@ -52,6 +55,8 @@ dependencies {
     compileOnly("net.essentialsx:EssentialsX:2.19.0") {
         exclude(group = "org.bstats", module = "bstats-bukkit")
     }
+    compileOnly(project(":libs:Utilities-OG"))
+    compileOnly(project(":libs:GxUI-OG"))
     compileOnly(project(":libs:DiamondBank-OG"))
 }
 

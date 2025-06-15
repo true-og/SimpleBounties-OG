@@ -10,4 +10,6 @@ if (exitValue != 0) {
     throw GradleException("bootstrap.sh failed with exit code $exitValue")
 }
 
+include("libs:Utilities-OG")
+include("libs:GxUI-OG")
 include("libs:DiamondBank-OG")
