@@ -7,59 +7,52 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 
 public class BountyEvents implements Listener {
 
-	public BountyCommands  bountyCommands = null;
+    public BountyCommands bountyCommands = null;
 
-	@EventHandler
-	public void onKill(PlayerDeathEvent event) {
+    @EventHandler
+    public void onKill(PlayerDeathEvent event) {
 
-		try {
+        try {
 
-			String killed = event.getEntity().getName();
-			String killer = event.getEntity().getKiller().getName();
-			if (killed != killer) {
+            String killed = event.getEntity().getName();
+            String killer = event.getEntity().getKiller().getName();
+            if (killed != killer) {
 
-				// event.setDeathMessage(ChatColor.RED + killed + " has been murdered by " + killer);
+                // event.setDeathMessage(ChatColor.RED + killed + " has been murdered by " + killer);
 
-				bountyCheck(killed, killer);
+                bountyCheck(killed, killer);
+            }
 
-			}
+        } catch (Exception error) {
+        }
 
-		}
-		catch (Exception error) {}
-
-		/*(catch (Exception exception) {
+        /*(catch (Exception exception) {
             String killed = e.getEntity().getName();
             String killer = "God";
             // error.setDeathMessage(ChatColor.RED + killed + " has been murdered by " + killer);
             bountyCheck(killed, killer);
         }*/
 
-	}
+    }
 
-	// Check if killed player has a bounty on them. If it was a valid bounty, complete the bounty.
-	private void bountyCheck(String killed, String killer) {
+    // Check if killed player has a bounty on them. If it was a valid bounty, complete the bounty.
+    private void bountyCheck(String killed, String killer) {
 
-		bountyCommands = SimpleBountiesOG.getBountyCommands();
-		if (bountyCommands == null) {
+        bountyCommands = SimpleBountiesOG.getBountyCommands();
+        if (bountyCommands == null) {
 
-			Bukkit.getLogger().warning("BountyEvents has no reference to BountyCommands");
+            Bukkit.getLogger().warning("BountyEvents has no reference to BountyCommands");
 
-		}
-		else {
+        } else {
 
-			if (bountyCommands.isValidBounty(killed)) {
+            if (bountyCommands.isValidBounty(killed)) {
 
-				bountyCommands.completeBounty(killed, killer);
+                bountyCommands.completeBounty(killed, killer);
 
-			}
-			else {
+            } else {
 
-				Bukkit.getLogger().info("bountyCheck: isValidBounty is false");
-
-			}
-
-		}
-
-	}
-
+                Bukkit.getLogger().info("bountyCheck: isValidBounty is false");
+            }
+        }
+    }
 }

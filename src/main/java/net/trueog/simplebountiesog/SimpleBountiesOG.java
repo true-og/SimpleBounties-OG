@@ -3,7 +3,7 @@ package net.trueog.simplebountiesog;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
-
+import net.trueog.diamondbankog.DiamondBankAPIJava;
 import org.bukkit.Bukkit;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -11,156 +11,144 @@ import org.bukkit.permissions.Permission;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import net.trueog.diamondbankog.DiamondBankAPIJava;
-
 public final class SimpleBountiesOG extends JavaPlugin {
 
-	private static SimpleBountiesOG plugin;
-	FileConfiguration config = getConfig();
-	BountyEvents bountyEvents = new BountyEvents();
-	TabCompleter tabCompleter = new TabCompletion();
-	private static final Logger log = Logger.getLogger("Minecraft");
-	private static Permission perms = null;
-	static BountyCommands bountyCommands;
-	private static DiamondBankAPIJava diamondBankAPI;
-	private EconomyHandler economyHandler;
+    private static SimpleBountiesOG plugin;
+    FileConfiguration config = getConfig();
+    BountyEvents bountyEvents = new BountyEvents();
+    TabCompleter tabCompleter = new TabCompletion();
+    private static final Logger log = Logger.getLogger("Minecraft");
+    private static Permission perms = null;
+    static BountyCommands bountyCommands;
+    private static DiamondBankAPIJava diamondBankAPI;
+    private EconomyHandler economyHandler;
 
-	// Plugin startup logic.
-	@Override
-	public void onEnable() {
+    // Plugin startup logic.
+    @Override
+    public void onEnable() {
 
-		// Initialize the plugin main class as a passable object.
-		plugin = this;
+        // Initialize the plugin main class as a passable object.
+        plugin = this;
 
-		config.options().copyDefaults(true);
-		saveConfig();
+        config.options().copyDefaults(true);
+        saveConfig();
 
-		// Initialize DiamondBank-OG API.
-		RegisteredServiceProvider<DiamondBankAPIJava> diamondBankAPIProvider = getServer().getServicesManager().getRegistration(DiamondBankAPIJava.class);
-		if (diamondBankAPIProvider == null) {
-			getLogger().severe("DiamondBank-OG API is null");
-			Bukkit.getPluginManager().disablePlugin(this);
-			return;
-		}
-		diamondBankAPI = diamondBankAPIProvider.getProvider();
+        // Initialize DiamondBank-OG API.
+        RegisteredServiceProvider<DiamondBankAPIJava> diamondBankAPIProvider =
+                getServer().getServicesManager().getRegistration(DiamondBankAPIJava.class);
+        if (diamondBankAPIProvider == null) {
+            getLogger().severe("DiamondBank-OG API is null");
+            Bukkit.getPluginManager().disablePlugin(this);
+            return;
+        }
+        diamondBankAPI = diamondBankAPIProvider.getProvider();
 
-		// Initialize bounty commands.
-		economyHandler = new EconomyHandler(diamondBankAPI);
-		bountyCommands = new BountyCommands(this, economyHandler);
+        // Initialize bounty commands.
+        economyHandler = new EconomyHandler(diamondBankAPI);
+        bountyCommands = new BountyCommands(this, economyHandler);
 
-		getServer().getPluginCommand("bounty").setExecutor(bountyCommands);
-		getServer().getPluginManager().registerEvents(bountyEvents, this);
+        getServer().getPluginCommand("bounty").setExecutor(bountyCommands);
+        getServer().getPluginManager().registerEvents(bountyEvents, this);
 
-		getCommand("bounty").setTabCompleter(tabCompleter);
+        getCommand("bounty").setTabCompleter(tabCompleter);
 
-		// So we have an empty bounty buffer and it all comes from saved data.
-		bountyCommands.clearBounties();
+        // So we have an empty bounty buffer and it all comes from saved data.
+        bountyCommands.clearBounties();
 
-		loadBounties();
+        loadBounties();
 
-		setupPermissions();
+        setupPermissions();
 
-		log.info("SimpleBounties-OG has loaded correctly.");
+        log.info("SimpleBounties-OG has loaded correctly.");
+    }
 
-	}
+    // Plugin shutdown logic.
+    @Override
+    public void onDisable() {
 
-	// Plugin shutdown logic.
-	@Override
-	public void onDisable() {
+        saveBounties();
 
-		saveBounties();
+        config.options().copyDefaults(true);
+        saveConfig();
 
-		config.options().copyDefaults(true);
-		saveConfig();
+        log.info(String.format(
+                "[%s] Disabled Version %s",
+                getPluginMeta().getName(), getPluginMeta().getVersion()));
+    }
 
-		log.info(String.format("[%s] Disabled Version %s", getPluginMeta().getName(), getPluginMeta().getVersion()));
+    // DATA STRUCTURE: SENDER, TARGET, REWARD.
+    private void loadBounties() {
 
-	}
+        log.info("[Bounties] Loading bounties...");
 
-	// DATA STRUCTURE: SENDER, TARGET, REWARD.
-	private void loadBounties() {
+        List<String> bountiesToLoad = new ArrayList<String>();
+        List<String> tempBountyInfo = new ArrayList<String>();
+        bountiesToLoad = config.getStringList("bounties");
 
-		log.info("[Bounties] Loading bounties...");
+        // 0, 3, 6, 9, 12, etc.
+        int i = 0;
+        // Temp counter, for use inside the sets of three.
+        int t = 0;
+        for (String s : bountiesToLoad) {
 
-		List<String> bountiesToLoad = new ArrayList<String>();
-		List<String> tempBountyInfo = new ArrayList<String>();
-		bountiesToLoad = config.getStringList("bounties");
+            if (i % 3 <= 0) {
 
-		// 0, 3, 6, 9, 12, etc.
-		int i = 0;
-		// Temp counter, for use inside the sets of three.
-		int t = 0;
-		for (String s : bountiesToLoad) {
+                t = 0;
+            }
+            if (t == 0 || t == 1) {
 
-			if (i % 3 <= 0) {
+                tempBountyInfo.add(s);
 
-				t = 0;
+                t++;
 
-			}
-			if (t == 0 || t == 1) {
+            } else if (t == 2) {
 
-				tempBountyInfo.add(s);
+                tempBountyInfo.add(s);
 
-				t++;
+                // Tells bountycommands to load a bounty with the tempinfo data.
+                bountyCommands.loadBounty(tempBountyInfo);
 
-			}
-			else if (t == 2) {
+                tempBountyInfo.clear();
+            }
 
-				tempBountyInfo.add(s);
+            i++;
+        }
+    }
 
-				// Tells bountycommands to load a bounty with the tempinfo data.
-				bountyCommands.loadBounty(tempBountyInfo);
+    private void saveBounties() {
 
-				tempBountyInfo.clear();
+        log.info("[Bounties] Saving bounties...");
 
-			}
+        List<String> tempBountyInfo = new ArrayList<String>();
+        for (Bounty b : bountyCommands.bounties) {
 
-			i++;
+            tempBountyInfo.addAll(bountyCommands.seperateBounty(b));
+        }
 
-		}
+        config.set("bounties", tempBountyInfo);
+    }
 
-	}
+    private boolean setupPermissions() {
 
-	private void saveBounties() {
+        RegisteredServiceProvider<Permission> rsp =
+                getServer().getServicesManager().getRegistration(Permission.class);
+        perms = rsp.getProvider();
 
-		log.info("[Bounties] Saving bounties...");
+        return perms != null;
+    }
 
-		List<String> tempBountyInfo = new ArrayList<String>();
-		for (Bounty b: bountyCommands.bounties) {
+    public static BountyCommands getBountyCommands() {
 
-			tempBountyInfo.addAll(bountyCommands.seperateBounty(b));
+        return bountyCommands;
+    }
 
-		}
+    public static SimpleBountiesOG getPlugin() {
 
-		config.set("bounties", tempBountyInfo);
+        return plugin;
+    }
 
-	}
+    public static DiamondBankAPIJava diamondBankAPI() {
 
-	private boolean setupPermissions() {
-
-		RegisteredServiceProvider<Permission> rsp = getServer().getServicesManager().getRegistration(Permission.class);
-		perms = rsp.getProvider();
-
-		return perms != null;
-
-	}
-
-	public static BountyCommands getBountyCommands() {
-
-		return bountyCommands;
-
-	}
-
-	public static SimpleBountiesOG getPlugin() {
-
-		return plugin;
-
-	}
-
-	public static DiamondBankAPIJava diamondBankAPI() {
-
-		return diamondBankAPI;
-
-	}
-
+        return diamondBankAPI;
+    }
 }

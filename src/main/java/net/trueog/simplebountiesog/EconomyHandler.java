@@ -2,193 +2,163 @@ package net.trueog.simplebountiesog;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-
-import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
-
 import net.trueog.diamondbankog.DiamondBankAPIJava;
 import net.trueog.diamondbankog.DiamondBankException;
 import net.trueog.diamondbankog.PostgreSQL.PlayerShards;
 import net.trueog.diamondbankog.PostgreSQL.ShardType;
 import net.trueog.utilitiesog.UtilitiesOG;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 
 public class EconomyHandler {
 
-	private final DiamondBankAPIJava api;
+    private final DiamondBankAPIJava api;
 
-	public EconomyHandler(DiamondBankAPIJava api) {
+    public EconomyHandler(DiamondBankAPIJava api) {
 
-		this.api = api;
+        this.api = api;
+    }
 
-	}
+    public void withdraw(Player player, String amt) {
 
-	public void withdraw(Player player, String amt) {
+        Bukkit.getScheduler().runTaskAsynchronously(SimpleBountiesOG.getPlugin(), () -> {
+            int diamonds;
+            try {
 
-		Bukkit.getScheduler().runTaskAsynchronously(SimpleBountiesOG.getPlugin(), () -> {
+                diamonds = Integer.parseInt(amt);
 
-			int diamonds;
-			try {
+            } catch (NumberFormatException error) {
 
-				diamonds = Integer.parseInt(amt);
+                UtilitiesOG.trueogMessage(player, "&cERROR: Invalid amount.");
+                return;
+            }
 
-			}
-			catch (NumberFormatException error) {
+            int shards = diamonds * 9;
 
-				UtilitiesOG.trueogMessage(player, "&cERROR: Invalid amount.");
-				return;
+            try {
 
-			}
+                api.subtractFromPlayerBankShards(
+                                player.getUniqueId(), shards, "Withdraw", "Player withdrawal via bounty plugin.")
+                        .get();
 
-			int shards = diamonds * 9;
+                UtilitiesOG.trueogMessage(player, "&aWithdrawal successful.");
 
-			try {
+            } catch (InterruptedException | ExecutionException error) {
 
-				api.subtractFromPlayerBankShards(player.getUniqueId(), shards, "Withdraw", "Player withdrawal via bounty plugin.").get();
+                UtilitiesOG.trueogMessage(player, "&cERROR: An error occurred during withdrawal.");
+                error.printStackTrace();
 
-				UtilitiesOG.trueogMessage(player, "&aWithdrawal successful.");
+            } catch (DiamondBankException.EconomyDisabledException error) {
 
-			}
-			catch (InterruptedException | ExecutionException error) {
+                UtilitiesOG.trueogMessage(player, "&cERROR: Economy is disabled.");
+                error.printStackTrace();
 
-				UtilitiesOG.trueogMessage(player, "&cERROR: An error occurred during withdrawal.");
-				error.printStackTrace();
+            } catch (DiamondBankException.TransactionsLockedException error) {
 
-			}
-			catch (DiamondBankException.EconomyDisabledException error) {
+                UtilitiesOG.trueogMessage(player, "&cERROR: Transactions locked. Please try later.");
+                error.printStackTrace();
 
-				UtilitiesOG.trueogMessage(player, "&cERROR: Economy is disabled.");
-				error.printStackTrace();
+            } catch (DiamondBankException.OtherException error) {
 
-			}
-			catch (DiamondBankException.TransactionsLockedException error) {
+                UtilitiesOG.trueogMessage(player, "&cERROR: An unexpected error occurred.");
+                error.printStackTrace();
+            }
+        });
+    }
 
-				UtilitiesOG.trueogMessage(player, "&cERROR: Transactions locked. Please try later.");
-				error.printStackTrace();
+    public void deposit(Player player, String amt) {
 
-			}
-			catch (DiamondBankException.OtherException error) {
+        Bukkit.getScheduler().runTaskAsynchronously(SimpleBountiesOG.getPlugin(), () -> {
+            int diamonds;
+            try {
 
-				UtilitiesOG.trueogMessage(player, "&cERROR: An unexpected error occurred.");
-				error.printStackTrace();
+                diamonds = Integer.parseInt(amt);
 
-			}
+            } catch (NumberFormatException error) {
 
-		});
+                UtilitiesOG.trueogMessage(player, "&cERROR: Invalid amount.");
+                return;
+            }
 
-	}
+            int shards = diamonds * 9;
 
-	public void deposit(Player player, String amt) {
+            try {
 
-		Bukkit.getScheduler().runTaskAsynchronously(SimpleBountiesOG.getPlugin(), () -> {
+                api.addToPlayerBankShards(player.getUniqueId(), shards, "Deposit", "Player deposit via bounty plugin.")
+                        .get();
 
-			int diamonds;
-			try {
+                UtilitiesOG.trueogMessage(player, "&aDeposit successful.");
 
-				diamonds = Integer.parseInt(amt);
+            } catch (InterruptedException | ExecutionException error) {
 
-			}
-			catch (NumberFormatException error) {
+                UtilitiesOG.trueogMessage(player, "&cERROR: An error occurred during deposit.");
+                error.printStackTrace();
 
-				UtilitiesOG.trueogMessage(player, "&cERROR: Invalid amount.");
-				return;
+            } catch (DiamondBankException.EconomyDisabledException error) {
 
-			}
+                UtilitiesOG.trueogMessage(player, "&cERROR: Economy is disabled.");
+                error.printStackTrace();
 
-			int shards = diamonds * 9;
+            } catch (DiamondBankException.TransactionsLockedException error) {
 
-			try {
+                UtilitiesOG.trueogMessage(player, "&cERROR: Transactions locked. Please try later.");
+                error.printStackTrace();
 
-				api.addToPlayerBankShards(player.getUniqueId(), shards, "Deposit", "Player deposit via bounty plugin.").get();
+            } catch (DiamondBankException.OtherException error) {
 
-				UtilitiesOG.trueogMessage(player, "&aDeposit successful.");
+                UtilitiesOG.trueogMessage(player, "&cERROR: An unexpected error occurred.");
+                error.printStackTrace();
+            }
+        });
+    }
 
-			}
-			catch (InterruptedException | ExecutionException error) {
+    public void balance(Player player) {
 
-				UtilitiesOG.trueogMessage(player, "&cERROR: An error occurred during deposit.");
-				error.printStackTrace();
+        Bukkit.getScheduler().runTaskAsynchronously(SimpleBountiesOG.getPlugin(), () -> {
+            CompletableFuture<PlayerShards> future;
+            try {
 
-			}
-			catch (DiamondBankException.EconomyDisabledException error) {
+                future = api.getPlayerShards(player.getUniqueId(), ShardType.ALL);
 
-				UtilitiesOG.trueogMessage(player, "&cERROR: Economy is disabled.");
-				error.printStackTrace();
+            } catch (DiamondBankException.EconomyDisabledException error) {
 
-			}
-			catch (DiamondBankException.TransactionsLockedException error) {
+                UtilitiesOG.trueogMessage(player, "&cERROR: Economy is disabled.");
+                error.printStackTrace();
+                return;
 
-				UtilitiesOG.trueogMessage(player, "&cERROR: Transactions locked. Please try later.");
-				error.printStackTrace();
+            } catch (DiamondBankException.TransactionsLockedException error) {
 
-			}
-			catch (DiamondBankException.OtherException error) {
+                UtilitiesOG.trueogMessage(player, "&cERROR: Transactions locked. Please try later.");
+                error.printStackTrace();
+                return;
 
-				UtilitiesOG.trueogMessage(player, "&cERROR: An unexpected error occurred.");
-				error.printStackTrace();
+            } catch (DiamondBankException.OtherException error) {
 
-			}
+                UtilitiesOG.trueogMessage(player, "&cERROR: Something went wrong.");
+                error.printStackTrace();
+                return;
+            }
 
-		});
+            try {
 
-	}
+                PlayerShards shards = future.get();
+                if (shards.getShardsInBank() == null || shards.getShardsInInventory() == null) {
 
-	public void balance(Player player) {
+                    UtilitiesOG.trueogMessage(player, "&cERROR: No shards found.");
+                    return;
+                }
 
-		Bukkit.getScheduler().runTaskAsynchronously(SimpleBountiesOG.getPlugin(), () -> {
+                int totalShards = shards.getShardsInBank() + shards.getShardsInInventory();
+                int diamonds = totalShards / 9;
+                int remainingShards = totalShards % 9;
 
-			CompletableFuture<PlayerShards> future;
-			try {
+                UtilitiesOG.trueogMessage(
+                        player, "&aBalance: " + diamonds + " diamonds and " + remainingShards + " shards.");
 
-				future = api.getPlayerShards(player.getUniqueId(), ShardType.ALL);
+            } catch (InterruptedException | ExecutionException error) {
 
-			}
-			catch (DiamondBankException.EconomyDisabledException error) {
-
-				UtilitiesOG.trueogMessage(player, "&cERROR: Economy is disabled.");
-				error.printStackTrace();
-				return;
-
-			}
-			catch (DiamondBankException.TransactionsLockedException error) {
-
-				UtilitiesOG.trueogMessage(player, "&cERROR: Transactions locked. Please try later.");
-				error.printStackTrace();
-				return;
-
-			}
-			catch (DiamondBankException.OtherException error) {
-
-				UtilitiesOG.trueogMessage(player, "&cERROR: Something went wrong.");
-				error.printStackTrace();
-				return;
-
-			}
-
-			try {
-
-				PlayerShards shards = future.get();
-				if (shards.getShardsInBank() == null || shards.getShardsInInventory() == null) {
-
-					UtilitiesOG.trueogMessage(player, "&cERROR: No shards found.");
-					return;
-
-				}
-
-				int totalShards = shards.getShardsInBank() + shards.getShardsInInventory();
-				int diamonds = totalShards / 9;
-				int remainingShards = totalShards % 9;
-
-				UtilitiesOG.trueogMessage(player, "&aBalance: " + diamonds + " diamonds and " + remainingShards + " shards.");
-
-			}
-			catch (InterruptedException | ExecutionException error) {
-
-				UtilitiesOG.trueogMessage(player, "&cERROR: Error retrieving balance.");
-
-			}
-
-		});
-
-	}
-
+                UtilitiesOG.trueogMessage(player, "&cERROR: Error retrieving balance.");
+            }
+        });
+    }
 }
