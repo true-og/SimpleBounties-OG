@@ -14,7 +14,7 @@ java {
 
 group = "me.bribedjupiter" // From groupId in pom.xml
 
-version = "0.3" // Declare plugin version (will be in .jar).
+version = "0.3.1" // Declare plugin version (will be in .jar).
 
 val apiVersion = "1.19" // Declare minecraft server target version.
 
@@ -72,8 +72,6 @@ tasks.withType<JavaCompile>().configureEach {
     options.encoding = "UTF-8"
     options.isFork = true
 }
-
-kotlin { jvmToolchain(17) }
 
 java {
     toolchain {
